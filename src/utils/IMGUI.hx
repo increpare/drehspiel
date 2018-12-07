@@ -5,214 +5,182 @@ import Globals.*;
 
 class IMGUI {
 
-	public static function schalter(x,y,text1,text2,selection:Int) {
-		if (selection==0){
-			text1=" "+text1+" ";
-			text2="*"+text2+"*";
-		} else {
-			text1="*"+text1+"*";
-			text2=" "+text2+" ";
+
+	private static var buttonmask = [
+		"0000001111111000000",
+		"0000111111111110000",
+		"0001111111111111000",
+		"0011111111111111100",
+		"0111111111111111110",
+		"0111111111111111110",
+		"1111111111111111111",
+		"1111111111111111111",
+		"1111111111111111111",
+		"1111111111111111111",
+		"1111111111111111111",
+		"1111111111111111111",
+		"1111111111111111111",
+		"0111111111111111110",
+		"0111111111111111110",
+		"0011111111111111100",
+		"0001111111111111000",
+		"0000111111111110000",
+		"0000001111111000000"
+	];
+
+	private static var downstates:Map<String,Bool> = new Map<String,Bool>();
+
+	public static function pressbutton(
+		id:String,
+		bg:String,
+		bg_pressed:String,
+		im:String,
+		x:Int,
+		y:Int
+		) : Bool
+	{
+		
+		if (downstates.exists(id)==false){
+			downstates.set(id,false);
 		}
-		var oldtextsize=Text.size;
-		Text.size = GUI.buttonTextSize;
+		var downstate:Bool = downstates.get(id);
 		
-	  var textcolor =PAL.buttonTextCol;
-	  var color = PAL.buttonCol;
-	  var colorhover = PAL.buttonHighlightCol;
-	  var colorhover2:Int = PAL.buttonHighlightCol2;
-	  var borderCol = PAL.buttonBorderCol;
-	  var lightbgcol = PAL.buttonTextCol;
-	  var linethickness=GUI.linethickness;
-	  var xpadding = GUI.buttonPaddingX;
-	  var ypadding = GUI.buttonPaddingY;
+		var dx = Mouse.x-x;
+		var dy = Mouse.y-y;
+	 	var w = Gfx.imagewidth(bg);
+	 	var h = Gfx.imageheight(bg);
+		var over:Bool = dx>=0&& dy>=0 && dx<w && dy<h && buttonmask[dy].charAt(dx)=="1";
 
-	  Gfx.linethickness=linethickness;
+		var mouseclicked = Mouse.leftclick();
+		var mousedown = Mouse.leftheld()||mouseclicked;
+		var clicked=false;
+		if (over){
+			if (downstate==false){
+				if (mouseclicked){
+					downstate=true; 
+					clicked=true;
+				}
+			} else {//downstate==true
+				if (mousedown==false){
+					downstate=false;
+				}
+			}
+		} else {
+			downstate=false;	//no click
+		}
 
-	  var width=39;
-	  var w1 = Math.round(Text.width(text1));
-	  var w2 = Math.round(Text.width(text1));
-	  var w = w1+w2+xpadding*2;
-	  if (w+3>=width){
-	  	width=w+3;
-	  }
-	  width+=xpadding*2;
+		Gfx.drawimage(
+			x,
+			y,
+			downstate?bg_pressed:bg
+			);
+	
+		Gfx.drawimage(
+			x+(downstate?-1:0),
+			y+(downstate?1:0),
+			im
+			);
 
-	  var height=Math.round(Math.max(Text.height(text1),Text.height(text2)));
-	  if (x==Text.CENTER){
-		  x=Math.round(Gfx.screenwidthmid-width/2);
-	  }
-	  //height+=ypadding*2;
-
-	  var dx = Mouse.x-x;
-	  var dy = Mouse.y-y;
-
-	  var collide = !(dx<0||dx>=width||dy<0||dy>=height);
-
-	  var click = collide && Mouse.leftclick();
-
-	  if (collide){
-	    color=colorhover2;
-		lightbgcol = colorhover;
-	  }
-	  Gfx.fillbox(x,y,width,height,color);
-	  if (selection==0){
-		  Gfx.fillbox(x,y,w1+2*xpadding,height,lightbgcol);
-	  } else {
-		  Gfx.fillbox(x+w1+2*xpadding,y,x+width-(x+w1+2*xpadding),height,lightbgcol);
-	  }
-
-	  Gfx.drawbox(x,y,width,height,borderCol);
-
-	  Text.display(x+xpadding, y+ypadding+2, text1, selection==1?textcolor:PAL.buttonCol);
-	  Text.display(x+xpadding+w1+xpadding*2, y+ypadding+2,text2,selection==0?textcolor:PAL.buttonCol);
-
-	  Text.size=oldtextsize;
-
-	  return click;
+		downstates.set(id,downstate);
+		return clicked;
 	}
 
-	public static function button(x,y,text) {
-		var oldtextsize=Text.size;
-		Text.size = GUI.buttonTextSize;
+	public static function togglebutton(
+		id:String,
+		bg:String,
+		bg_pressed:String,
+		im_0:String,
+		im_1:String,
+		x:Int,
+		y:Int,
+		state:Bool//img0 or img1
+		) : Bool
+		{
 		
-	  var textcolor =PAL.buttonTextCol;
-	  var color = PAL.buttonCol;
-	  var colorhover = PAL.buttonHighlightCol;
-	  var borderCol = PAL.buttonBorderCol;
+		if (downstates.exists(id)==false){
+			downstates.set(id,false);
+		}
+		var downstate = downstates.get(id);
 
-	  var linethickness=GUI.linethickness;
-	  var xpadding = GUI.buttonPaddingX;
-	  var ypadding = GUI.buttonPaddingY;
+		var dx = Mouse.x-x;
+		var dy = Mouse.y-y;
+	 	var w = Gfx.imagewidth(bg);
+	 	var h = Gfx.imageheight(bg);
+		var over:Bool = dx>=0&& dy>=0 && dx<w && dy<h && buttonmask[dy].charAt(dx)=="1";
 
-	  Gfx.linethickness=linethickness;
+		var mouseclicked = Mouse.leftclick();
+		var mousedown = Mouse.leftheld()||mouseclicked;
 
-	  var width=39;
-	  var w = Math.round(Text.width(text));
-	  if (w+3>=width){
-	  	width=w+3;
-	  }
-	  width+=xpadding*2;
+		if (over){
+			if (downstate==false){
+				if (mouseclicked){
+					downstate=true; 
+					state=!state;//click
+				}
+			} else {//downstate==true
+				if (mousedown==false){
+					downstate=false;
+				}
+			}
+		} else {
+			downstate=false;	//no click
+		}
 
-	  var height=Math.round(Text.height(text));
-	  if (x==Text.CENTER){
-		  x=Math.round(Gfx.screenwidthmid-width/2);
-	  }
-	  //height+=ypadding;
+		Gfx.drawimage(
+			x,
+			y,
+			downstate?bg_pressed:bg
+			);
+	
+		Gfx.drawimage(
+			x+(downstate?-1:0),
+			y+(downstate?1:0),
+			state?im_1:im_0
+			);
 
-	  var dx = Mouse.x-x;
-	  var dy = Mouse.y-y;
-
-	  var collide = !(dx<0||dx>=width||dy<0||dy>=height);
-
-	  var click = collide && Mouse.leftclick();
-
-	  if (collide&& !click){
-	    color=colorhover;
-	  }
-
-	  Gfx.fillbox(x,y,width,height,color);
-	  Gfx.drawbox(x,y,width,height,borderCol);
-
-	  Text.display(x+xpadding, y+ypadding+2, text, textcolor);
-	  Text.size=oldtextsize;
-
-	  return click;
+		downstates.set(id,downstate);
+		return state;
 	}
 
 
-	public static function selectedbutton(x,y,text) {
-		var oldtextsize=Text.size;
-		Text.size = GUI.buttonTextSize;
+	public static function pushbutton(
+		id:String,
+		bg:String,
+		bg_pressed:String,
+		im:String,
+		x:Int,
+		y:Int,
+		state:Bool//img0 or img1
+		) : Bool
+		{
 		
-	  var textcolor =PAL.buttonTextCol;
-	  var color = PAL.buttonCol;
-	  var colorhover = PAL.buttonHighlightCol;
-	  var borderCol = PAL.buttonBorderCol;
+		var dx = Mouse.x-x;
+		var dy = Mouse.y-y;
+	 	var w = Gfx.imagewidth(bg);
+	 	var h = Gfx.imageheight(bg);
+		var over:Bool = dx>=0&& dy>=0 && dx<w && dy<h && buttonmask[dy].charAt(dx)=="1";
 
-	  var linethickness=GUI.linethickness;
-	  var xpadding = GUI.buttonPaddingX;
-	  var ypadding = GUI.buttonPaddingY;
+		var mouseclicked = Mouse.leftclick();
+		var mousedown = Mouse.leftheld()||mouseclicked;
 
-	  Gfx.linethickness=linethickness;
+		if (over && mouseclicked){
+			state=!state;
+		}
+			
 
-	  var width=39;
-	  var w = Math.round(Text.width(text));
-	  if (w+3>=width){
-	  	width=w+3;
-	  }
-	  width+=xpadding*2;
+		var downstate=state;
+		Gfx.drawimage(
+			x,
+			y,
+			downstate?bg_pressed:bg
+			);
+			
+		Gfx.drawimage(
+			x+(downstate?-1:0),
+			y+(downstate?1:0),
+			im
+			);
 
-	  var height=Math.round(Text.height(text));
-	  if (x==Text.CENTER){
-		  x=Math.round(Gfx.screenwidthmid-width/2);
-	  }
-	  height+=ypadding*2;
-
-	  var dx = Mouse.x-x;
-	  var dy = Mouse.y-y;
-
-	  var collide = !(dx<0||dx>=width||dy<0||dy>=height);
-
-	  var click = collide && Mouse.leftclick();
-
-	  if (collide&& !click){
-	    //color=colorhover;
-	  }
-
-	  Gfx.fillbox(x,y,width,height,textcolor);
-	  Gfx.drawbox(x,y,width,height,borderCol);
-
-	  Text.display(x+xpadding, y+ypadding+2, text, color);
-	  Text.size=oldtextsize;
-
-	  return click;
-	}
-
-	public static function Bildbutton(x:Int,y:Int,bild:String,an:Bool) {
-		var oldtextsize=Text.size;
-		Text.size = GUI.buttonTextSize;
-		
-	  var textcolor =PAL.buttonTextCol;
-	  var color = PAL.buttonCol;
-	  var colorhover = PAL.buttonHighlightCol;
-	  var borderCol = PAL.buttonBorderCol;
-
-	  var linethickness=GUI.linethickness;
-	  var xpadding = GUI.buttonPaddingX;
-	  var ypadding = GUI.buttonPaddingY;
-
-	  Gfx.linethickness=linethickness;
-
-	  var width = Gfx.imagewidth(bild);
-
-	  var height=Gfx.imageheight(bild);
-	  if (x==Text.CENTER){
-		  x=Math.round(Gfx.screenwidthmid-width/2);
-	  }
-
-	  var dx = Mouse.x-x;
-	  var dy = Mouse.y-y;
-
-	  var collide = !(dx<0||dx>=width||dy<0||dy>=height);
-
-	  var click = collide && Mouse.leftclick();
-
-	var alpha=1.0;
-	  if ( collide && !click ){
-		  if (!an){
-	    	color=colorhover;
-			alpha=0.6;
-		  }
-	  }
-
-	  Gfx.fillbox(x,y,width,height,color);
-	  Gfx.imagealpha=alpha;
-	  Gfx.drawimage(x,y,bild);
-	  Gfx.drawbox(x,y,width,height,borderCol);
-	  
-	  Gfx.imagealpha=1.0;
-	  Text.size=oldtextsize;
-
-	  return click;
+		return state;
 	}
 }

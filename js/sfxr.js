@@ -1098,6 +1098,8 @@ function playNote(seed,frequency,length,volume){
   sound.play();
 }
 
+//consider looing here
+//https://developers.google.com/web/updates/2018/11/web-audio-autoplay
 function playSound(seed,vol) {
   if (typeof vol === "undefined"){
     vol=1;
